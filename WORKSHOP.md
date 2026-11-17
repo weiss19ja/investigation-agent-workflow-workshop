@@ -88,14 +88,14 @@ the test results, and refine.
 You work in **your own fork**. The GitHub connector reads the sample app from it, at the commit that sent each error,
 so every module ends with a commit and a push.
 
-Cells that open **Vibe** are interactive: they run in the VS Code terminal panel (full size; the workspace settings
+Cells that open __Vibe__ are interactive: they run in the VS Code terminal panel (full size; the workspace settings
 arrange that), Vibe builds while you watch and asks before risky actions, and `/quit` or `ctrl+c` hands control back.
 They all have the shape `uv run --env-file .env vibe "$(cat workshop/prompts/<module>.md)"`: `uv run --env-file`
 loads your `.env` into the environment (Vibe reads `MISTRAL_API_KEY` from there), and the prompt file is passed as
 Vibe's first message. Prefer no UI? Add `--trust --auto-approve --output streaming -p` before the prompt to run it
 headless with tool calls auto-approved. Cells that run checks print their output under the cell.
 
-```
+```ini
 question ──> investigate workflow ──> agent session ──> Sentry connector (read-only)
                  (module 4)           (modules 1-2)   └─> GitHub connector (read-only)
                                             │
@@ -110,13 +110,13 @@ Studio, Sentry's Developer plan, GitHub Free. Nothing needs a credit card.
 ### 0.1 What runs where, and why
 
 - **Mistral Studio** runs the model, holds the **connectors** (your Sentry and GitHub logins, so the agent never sees a
-  token), traces every session in **Observability**, and in module 4 orchestrates the **workflow**.
+   token), traces every session in **Observability**, and in module 4 orchestrates the **workflow**.
 - **Sentry** receives six planted errors from the sample shop. They are the dataset: the agent investigates them, the
-  evals score the answers.
+   evals score the answers.
 - **GitHub** holds your fork. The agent reads the shop's code from it at the exact commit that sent each error, which
-  is how it can quote the offending line.
+   is how it can quote the offending line.
 - **Your machine** (or, as a fallback, a Codespace) runs the coding agent, the tests, the evals, and the two local
-  workers in module 4.
+   workers in module 4.
 
 ### 0.2 Fork the repository and open it
 
@@ -130,21 +130,21 @@ the three command-line tools the day needs. Each is one cell; press ▶, or copy
 
 **What.** [uv](https://docs.astral.sh/uv/) installs Python and every dependency, and runs everything in this file.
 
-```sh {"name":"install-uv","interactive":"false"}
+```sh {"interactive":"false","name":"install-uv"}
 curl -LsSf https://astral.sh/uv/install.sh | sh
 ```
 
 **What.** [Vibe](https://docs.mistral.ai/vibe/code/cli/install-setup), the coding agent you build with. The installer
 runs `uv tool install mistral-vibe` for you: Vibe lives outside the project environment, on your PATH as `vibe`.
 
-```sh {"name":"install-vibe","interactive":"false"}
+```sh {"interactive":"false","name":"install-vibe"}
 curl -LsSf https://mistral.ai/vibe/install.sh | bash
 ```
 
-**What.** The [Mistral CLI](https://docs.mistral.ai/studio/mistral-cli/quickstart), which scaffolds, runs and deploys
+__What.__ The [Mistral CLI](https://docs.mistral.ai/studio/mistral-cli/quickstart), which scaffolds, runs and deploys
 the workflow in modules 4 and 5. `MISTRAL_INSTALL_BUN=1` lets the installer bring the Bun runtime it needs.
 
-```sh {"name":"install-cli","interactive":"false"}
+```sh {"interactive":"false","name":"install-cli"}
 curl -fsSL https://mistral.ai/cli/install.sh | MISTRAL_INSTALL_BUN=1 bash
 ```
 
@@ -152,7 +152,7 @@ curl -fsSL https://mistral.ai/cli/install.sh | MISTRAL_INSTALL_BUN=1 bash
 terminals; this cell adds them for itself, so it works right away. If a later cell says `command not found`, open a
 new terminal (or reload the VS Code window) once.
 
-```sh {"name":"install-check","interactive":"false"}
+```sh {"interactive":"false","name":"install-check"}
 export PATH="$HOME/.local/bin:$HOME/.mistral/bin:$PATH" && uv --version && vibe --version && mistral --version
 ```
 
@@ -161,9 +161,9 @@ export PATH="$HOME/.local/bin:$HOME/.mistral/bin:$PATH" && uv --version && vibe 
 #### B · GitHub Codespaces (fallback)
 
 Nothing to install, but it is a remote machine: slower to start, and Vibe runs over the browser's terminal. On your
-fork, *Code → Codespaces → Create codespace on main*. The container runs the same three installs as A, installs the
+fork, _Code → Codespaces → Create codespace on main_. The container runs the same three installs as A, installs the
 dependencies (0.8) and opens this file as a notebook. If you add the four values below as Codespaces secrets first
-(*GitHub → Settings → Codespaces → Secrets*: `MISTRAL_API_KEY`, `SENTRY_CONNECTOR_NAME`, `GITHUB_CONNECTOR_NAME`,
+(_GitHub → Settings → Codespaces → Secrets_: `MISTRAL_API_KEY`, `SENTRY_CONNECTOR_NAME`, `GITHUB_CONNECTOR_NAME`,
 `SENTRY_DSN`), they land in `.env` automatically; otherwise you fill `.env` by hand as you go through 0.3 to 0.7.
 Skip the cells of A.
 
@@ -173,7 +173,7 @@ Skip the cells of A.
 you to fill in; any value already in the environment (Codespaces secrets arrive that way) is filled in. It never
 overwrites an existing `.env`, so running it twice is harmless.
 
-```sh {"name":"setup-env","interactive":"false"}
+```sh {"interactive":"false","name":"setup-env"}
 sh scripts/bootstrap-env.sh
 ```
 
@@ -207,7 +207,7 @@ with *connector … is not connected*.
    **Error Monitoring**; name it `workshop-shop`.
 3. The next screen shows a setup snippet with `dsn="https://…@…ingest.sentry.io/…"`. Copy the DSN. Later you find it
    under **Settings → Projects → workshop-shop → Client Keys (DSN)**.
-4. It goes in `.env` as `SENTRY_DSN`. The DSN can only *send* events; it cannot read anything, which is why it is safe
+4. It goes in `.env` as `SENTRY_DSN`. The DSN can only _send_ events; it cannot read anything, which is why it is safe
    in a local `.env` and useless to the agent.
 
 ### 0.5 Connect Sentry to Studio
@@ -215,17 +215,17 @@ with *connector … is not connected*.
 **What.** The Sentry connector from Studio's marketplace, authorized with your Sentry login. It gives the agent read
 access to your Sentry organization.
 
-**Why a connector instead of a token in `.env`.** The agent never holds a Sentry credential. Studio keeps the OAuth
-grant; the agent calls `search_issues` as *you*, every call is traced, and in module 2 a policy decides which of the
+__Why a connector instead of a token in `.env`.__ The agent never holds a Sentry credential. Studio keeps the OAuth
+grant; the agent calls `search_issues` as _you_, every call is traced, and in module 2 a policy decides which of the
 connector's tools it may call at all.
 
 1. In Studio, open **Connectors** ([console.mistral.ai/connectors](https://console.mistral.ai/connectors)) and click
    **New connector → Browse marketplace**.
 2. Search for **Sentry**, select it, and add it.
-3. Click **Connect**. Sentry opens: sign in, pick your organization, and approve the access. Back in Studio the
+3. Click __Connect__. Sentry opens: sign in, pick your organization, and approve the access. Back in Studio the
    connector shows as connected and lists its tools: `find_organizations`, `find_projects`, `search_issues`,
    `search_events`, `get_sentry_resource`, and more (including write tools the agent will never be allowed to call).
-4. Copy the connector's **name** exactly as Studio shows it, suffix included if it has one (for example `sentry_d183`).
+4. Copy the connector's __name__ exactly as Studio shows it, suffix included if it has one (for example `sentry_d183`).
    It goes in `.env` as `SENTRY_CONNECTOR_NAME`. The SDK names the tools `connector_<name>.<tool>`, which is what
    module 2's policy matches.
 
@@ -238,7 +238,7 @@ given commit.
 2. Click **Connect**. GitHub opens. Authorize the **MistralAI** GitHub App for the account that owns your fork. When it
    asks for repository access, **Only select repositories → your fork** is the minimum; *All repositories* also works.
 3. Back in Studio, the connector lists its tools (`get_file_contents`, `list_commits`, `search_code`, …, plus write
-   tools the policy will deny). Copy its **name** as Studio shows it (for example `github`). It goes in `.env` as
+   tools the policy will deny). Copy its __name__ as Studio shows it (for example `github`). It goes in `.env` as
    `GITHUB_CONNECTOR_NAME`.
 
 If your Studio organization already connected GitHub at the organization level (*Admin → Connectors → App
@@ -246,7 +246,7 @@ Connections*), the connector is connected for you; make sure the app can see you
 
 ### 0.7 Complete `.env`
 
-**What.** A check that the file you created in 0.2 now has every value; `INVESTIGATION_AGENT_NAME` is the one you
+__What.__ A check that the file you created in 0.2 now has every value; `INVESTIGATION_AGENT_NAME` is the one you
 choose yourself.
 
 | Variable | Where it comes from | Who reads it |
@@ -277,13 +277,13 @@ carry their own dependency lists, because that is what their images build from i
 `agent/pyproject.toml` in module 1 and `mistral init` writes the workflow's in module 4. Vibe and the Mistral CLI are not
 in here: they are command-line tools, installed once in 0.2.
 
-```sh {"name":"setup","interactive":"false"}
+```sh {"interactive":"false","name":"setup"}
 uv sync --all-groups
 ```
 
 **What.** Lists the Mistral packages that landed in `.venv`, with their versions.
 
-```sh {"name":"setup-packages","interactive":"false"}
+```sh {"interactive":"false","name":"setup-packages"}
 uv pip list | grep -i mistral
 ```
 
@@ -295,17 +295,17 @@ version, something else installed the SDK into this `.venv`: run `uv sync --all-
 **What.** Runs the sample shop's own tests: they assert that each of the six bugs raises the expected exception, which
 proves the tooling works and the dataset is intact.
 
-```sh {"name":"setup-check","interactive":"false"}
+```sh {"interactive":"false","name":"setup-check"}
 uv run pytest tests/test_sample_app.py -q
 ```
 
 **Look for:** `8 passed`. Anything else is a setup problem to fix before the day.
 
-**What.** Vibe reads `MISTRAL_API_KEY` from the environment, and `uv run --env-file .env` puts it there, so there is
+__What.__ Vibe reads `MISTRAL_API_KEY` from the environment, and `uv run --env-file .env` puts it there, so there is
 no sign-in step. This cell runs one tiny headless turn (`-p` is headless mode, `--max-turns 1` stops after one
 exchange, `--trust` skips the folder-trust prompt) to prove Vibe reaches Mistral with your key.
 
-```sh {"name":"setup-vibe","interactive":"false"}
+```sh {"interactive":"false","name":"setup-vibe"}
 uv run --env-file .env vibe --trust --max-turns 1 --output text -p "Reply with exactly one word: ready"
 ```
 
@@ -316,19 +316,19 @@ at *high* (the footer reads `Mistral Large 4[high]`); high spends several times 
 In the Vibe window type `/thinking`, pick **medium**, and let the picker save it (not "session only"), then `/exit`.
 Every `vibe-N` cell from now on runs at medium; the footer will say so.
 
-```sh {"name":"setup-vibe-thinking","interactive":"true","closeTerminalOnSuccess":"false","excludeFromRunAll":"true"}
+```sh {"closeTerminalOnSuccess":"false","excludeFromRunAll":"true","interactive":"true","name":"setup-vibe-thinking"}
 uv run --env-file .env vibe
 ```
 
 **Look for:** `Mistral Large 4[medium]` in the footer before you `/exit`.
 
-**What.** Signs the **Mistral CLI** in with the API key you already have. Module 4 uses the CLI to scaffold the
+__What.__ Signs the __Mistral CLI__ in with the API key you already have. Module 4 uses the CLI to scaffold the
 workflow (`mistral init`) and run its worker (`mistral dev`); module 5 deploys with it. `mistral login --api-key -`
 reads the key from stdin, so the cell pipes `MISTRAL_API_KEY` out of `.env` and the key is never typed, echoed or left
 in a shell history; it works the same on your machine and in a Codespace. (Plain `mistral login` signs in through the
 browser instead; device-code sign-in is not available yet.) The CLI was installed in 0.2.
 
-```sh {"name":"setup-cli","interactive":"false"}
+```sh {"interactive":"false","name":"setup-cli"}
 uv run --env-file .env sh -c 'printf %s "$MISTRAL_API_KEY" | mistral login --api-key -' && mistral whoami
 ```
 
@@ -343,7 +343,7 @@ event is tagged with the scenario number, your fork's `owner/repo`, and the curr
 **Why commit and push first.** The agent will read the code *at that commit on your fork*. If the commit is not on
 GitHub, the GitHub connector cannot open it.
 
-```sh {"name":"setup-sentry","interactive":"false","excludeFromRunAll":"true"}
+```sh {"excludeFromRunAll":"true","interactive":"false","name":"setup-sentry"}
 git add -A && (git diff --cached --quiet || git commit -qm "Workshop setup") && git push
 cd sample-app && uv run --env-file ../.env python send_error.py all
 ```
@@ -370,7 +370,7 @@ scripted model, offline, so this module needs no network at all.
 name argument is the folder; `--no-git` because your fork already is a repository. It also writes an empty
 `agent/.env`, which the cell removes: this workshop keeps one `.env` at the root and passes it with `--env-file ../.env`.
 
-```sh {"name":"init-agent","interactive":"false"}
+```sh {"interactive":"false","name":"init-agent"}
 uv run agents init agent --no-git && rm agent/.env
 ```
 
@@ -379,7 +379,7 @@ uv run agents init agent --no-git && rm agent/.env
 its image from this file in module 5) and `main.py` (a hello-world agent with one tool, the file your coding agent
 replaces). The rest (`Dockerfile`, `.python-version`, `uv.lock`, `.gitignore`, `README.md`) stays as generated.
 
-```sh {"name":"scaffold","interactive":"false"}
+```sh {"interactive":"false","name":"scaffold"}
 ls -A agent && echo ---- && cat agent/pyproject.toml && echo ---- && cat agent/main.py
 ```
 
@@ -393,7 +393,7 @@ convention.
 **What.** The CLI loading the scaffold, before anything of yours exists: one friendly weather agent, no sandbox, one
 tool. Compare with the same command at the end of the module.
 
-```sh {"name":"info-0","interactive":"false"}
+```sh {"interactive":"false","name":"info-0"}
 cd agent && uv run --env-file ../.env agents info .
 ```
 
@@ -407,7 +407,7 @@ If it says `[high]`, type `/thinking`, pick medium, save, and carry on. Expect t
 coding agent reads the files, writes the five files, runs the tests and fixes what fails. Watch what it does rather
 than waiting: the tool calls it makes are the point of the exercise, and the facilitator keeps presenting meanwhile.
 
-```sh {"name":"vibe-1","interactive":"true","closeTerminalOnSuccess":"false","excludeFromRunAll":"true"}
+```sh {"closeTerminalOnSuccess":"false","excludeFromRunAll":"true","interactive":"true","name":"vibe-1"}
 uv run --env-file .env vibe "$(cat workshop/prompts/01-agent-skeleton.md)"
 ```
 
@@ -424,7 +424,7 @@ The same goes for every `vibe-N` and `fix-N` cell below.
 build the agent with `connectors=False`, drive it with a scripted model, and check the report, the error handling and
 the CLI.
 
-```sh {"name":"check-1","interactive":"false"}
+```sh {"interactive":"false","name":"check-1"}
 uv run pytest tests/test_sample_app.py tests/m1
 ```
 
@@ -439,7 +439,7 @@ folder; its message is the fix prompt (`workshop/prompts/fix.md`) followed by th
 run. Read the failure yourself first: turning a failing test into a precise follow-up is the skill of the day. Run it
 again after each round until `check-1` ends in `14 passed` (two or three rounds is normal); `/exit` between rounds.
 
-```sh {"name":"fix-1","interactive":"true","closeTerminalOnSuccess":"false","excludeFromRunAll":"true"}
+```sh {"closeTerminalOnSuccess":"false","excludeFromRunAll":"true","interactive":"true","name":"fix-1"}
 uv run --env-file .env vibe -c "$(cat workshop/prompts/fix.md; uv run pytest tests/test_sample_app.py tests/m1 2>&1 | tail -n 80)"
 ```
 
@@ -448,17 +448,17 @@ Run `check-1` again. Two or three rounds is typical.
 **What.** `agents info` again, now on your agent: model, instructions, output type, and (from module 2) connectors,
 skills, hooks and the policy. The first `uv run` inside `agent/` creates the project's own `.venv` from its lockfile.
 
-```sh {"name":"info-1","interactive":"false"}
+```sh {"interactive":"false","name":"info-1"}
 cd agent && uv run --env-file ../.env agents info .
 ```
 
-**What.** One live question against the real model, in-process: `ask.py` is the small CLI you just built around
-`investigate()`. **This agent has no connectors yet.** Module 2 adds them; `build_agent(connectors=True)` does nothing
+__What.__ One live question against the real model, in-process: `ask.py` is the small CLI you just built around
+`investigate()`. __This agent has no connectors yet.__ Module 2 adds them; `build_agent(connectors=True)` does nothing
 until then. So the only honest answer it can give is "I cannot see Sentry", and that is what this cell is for: it
 proves the path question → session → validated report, and it shows a model admitting what it cannot know instead of
 inventing a cause.
 
-```sh {"name":"ask-1","interactive":"false"}
+```sh {"interactive":"false","name":"ask-1"}
 cd agent && uv run --env-file ../.env python ask.py "What's causing the latest ValueError in Sentry, and which code is responsible?"
 ```
 
@@ -471,7 +471,7 @@ answers the same question with the file and the line.
 module 2. Nothing to commit (your coding agent, or you, already did) is fine: the cell skips the commit and still
 pushes.
 
-```sh {"name":"commit-1","interactive":"false"}
+```sh {"interactive":"false","name":"commit-1"}
 git add -A && (git diff --cached --quiet || git commit -qm "Module 1: a testable agent") && git push && git log --oneline -1
 ```
 
@@ -496,15 +496,15 @@ tests, then write `config.py` (connector names from `.env`, the read-only allowl
 audit trail), the two `SKILL.md` files, and wire them into `main.py`. Same rules as module 1: it stops when the tests
 pass; `/exit` when it reports.
 
-```sh {"name":"vibe-2","interactive":"true","closeTerminalOnSuccess":"false","excludeFromRunAll":"true"}
+```sh {"closeTerminalOnSuccess":"false","excludeFromRunAll":"true","interactive":"true","name":"vibe-2"}
 uv run --env-file .env vibe "$(cat workshop/prompts/02-connectors-and-policy.md)"
 ```
 
-**What.** Module 2's tests pin the policy to the SDK's own rules: a write tool is denied, a read tool on the allowed
+__What.__ Module 2's tests pin the policy to the SDK's own rules: a write tool is denied, a read tool on the allowed
 list passes, the skill tool is allowed (forget `skill.*` and the model silently cannot load skills), and a scripted
 call to a forbidden tool shows up in `tool_calls` but never runs.
 
-```sh {"name":"check-2","interactive":"false"}
+```sh {"interactive":"false","name":"check-2"}
 uv run pytest tests/test_sample_app.py tests/m1 tests/m2
 ```
 
@@ -513,7 +513,7 @@ uv run pytest tests/test_sample_app.py tests/m1 tests/m2
 **Only if `check-2` reported failures; skip it when the last line was `41 passed`.** Same loop as module 1: the failing output goes back to
 the same Vibe session; re-run `check-2` after each round, `/exit` between rounds.
 
-```sh {"name":"fix-2","interactive":"true","closeTerminalOnSuccess":"false","excludeFromRunAll":"true"}
+```sh {"closeTerminalOnSuccess":"false","excludeFromRunAll":"true","interactive":"true","name":"fix-2"}
 uv run --env-file .env vibe -c "$(cat workshop/prompts/fix.md; uv run pytest tests/test_sample_app.py tests/m1 tests/m2 2>&1 | tail -n 80)"
 ```
 
@@ -522,7 +522,7 @@ uv run --env-file .env vibe -c "$(cat workshop/prompts/fix.md; uv run pytest tes
 `AuditTrail` hook and the whole permission policy, rule by rule. It is the fastest way to see whether the wiring in
 `main.py` is what the card asked for, without spending a model call.
 
-```sh {"name":"info-2","interactive":"false"}
+```sh {"interactive":"false","name":"info-2"}
 cd agent && uv run --env-file ../.env agents info .
 ```
 
@@ -532,20 +532,20 @@ cd agent && uv run --env-file ../.env agents info .
 the policy. This is the first time it can actually look: load the Sentry skill, find the latest `ValueError`, read its
 stack and release, open the file at that commit on your fork, and name the line. One real session, a minute or so.
 
-```sh {"name":"ask-2","interactive":"false"}
+```sh {"interactive":"false","name":"ask-2"}
 cd agent && uv run --env-file ../.env python ask.py "What's causing the latest ValueError in Sentry, and which code is responsible?"
 ```
 
-**Look for:** `file: sample-app/shop/pricing.py`, `symbol: parse_amount`, `confidence: high`, evidence pointing at a
+__Look for:__ `file: sample-app/shop/pricing.py`, `symbol: parse_amount`, `confidence: high`, evidence pointing at a
 Sentry event and a GitHub file at the release commit. Read the tool-calls line: `skill.read` first, then
 `connector_<sentry>.search_issues`, then `connector_<github>.get_file_contents`. If a call was denied it still appears
-in the list; it just did not run. Open **Studio → Observability** and find the same session: that trace is what you
+in the list; it just did not run. Open __Studio → Observability__ and find the same session: that trace is what you
 will read in module 3 when a case fails.
 
 **What.** Commits and pushes module 2 (skips the commit if there is nothing new). Module 3's eval runs against this
 agent, so what you push now is the baseline you will measure.
 
-```sh {"name":"commit-2","interactive":"false"}
+```sh {"interactive":"false","name":"commit-2"}
 git add -A && (git diff --cached --quiet || git commit -qm "Module 2: connectors behind a deny-by-default policy") && git push && git log --oneline -1
 ```
 
@@ -566,25 +566,25 @@ engineer would ask, plus what a correct investigation must find (the exception t
 words any correct root cause mentions, and the planted bug explained by the person who planted it). The runner asks
 the module 2 agent each question in its own session, takes the `InvestigationReport` it returns, and scores it twice:
 
-- **Four deterministic scorers** check the facts: is `file` the expected file, `symbol` the expected function,
-  `exception` the expected type, and does `root_cause` mention at least two of the cause keywords? Each is right or
-  wrong, no model involved, so the same report always scores the same.
+- __Four deterministic scorers__ check the facts: is `file` the expected file, `symbol` the expected function,
+   `exception` the expected type, and does `root_cause` mention at least two of the cause keywords? Each is right or
+   wrong, no model involved, so the same report always scores the same.
 - **One LLM judge** grades what the scorers cannot: did the explanation name the real defect, quote the line, cite
-  evidence, and avoid claims it has no evidence for? It gives 1 to 5 against the reference cause. It never sees Sentry
-  or GitHub, only the case and the report, so it cannot be fooled by the same wrong file the agent read.
+   evidence, and avoid claims it has no evidence for? It gives 1 to 5 against the reference cause. It never sees Sentry
+   or GitHub, only the case and the report, so it cannot be fooled by the same wrong file the agent read.
 
 Across the six cases that gives an accuracy per scorer (how many of six were right) and a mean judge score. The
 **gate** turns the numbers into a decision: every scorer at 0.80 or above and the judge at 3.5 or above, or the run
 fails. Each run is saved under `evals/results/`, and the next run prints a delta against it: that delta is the
 answer to "better or worse".
 
-**What you build.** `evals/scoring.py` (the scorers, the summary, the gate), `evals/judge.py` (the rubric and the
+__What you build.__ `evals/scoring.py` (the scorers, the summary, the gate), `evals/judge.py` (the rubric and the
 judge call), `evals/run_evals.py` (run the cases, print the table, save the run, print the delta), with the dataset
-given. The `check-3` tests prove the *machinery* works, with scripted reports and no model: a run of the eval is what
-proves the *agent* works. Studio's hosted Evaluations do this same shape (dataset → task → evaluators → gate) for
+given. The `check-3` tests prove the _machinery_ works, with scripted reports and no model: a run of the eval is what
+proves the _agent_ works. Studio's hosted Evaluations do this same shape (dataset → task → evaluators → gate) for
 enterprise workspaces; you build it by hand today so every part of it is yours.
 
-```sh {"name":"vibe-3","interactive":"true","closeTerminalOnSuccess":"false","excludeFromRunAll":"true"}
+```sh {"closeTerminalOnSuccess":"false","excludeFromRunAll":"true","interactive":"true","name":"vibe-3"}
 uv run --env-file .env vibe "$(cat workshop/prompts/03-eval-loop.md)"
 ```
 
@@ -593,7 +593,7 @@ uv run --env-file .env vibe "$(cat workshop/prompts/03-eval-loop.md)"
 judge's prompt and check it carries the rubric, the reference cause and the report; they run the runner with a
 scripted agent, including one case that raises, and check the table, the saved file and the gate. No model is called.
 
-```sh {"name":"check-3","interactive":"false"}
+```sh {"interactive":"false","name":"check-3"}
 uv run pytest tests/test_sample_app.py tests/m1 tests/m2 tests/m3
 ```
 
@@ -602,7 +602,7 @@ uv run pytest tests/test_sample_app.py tests/m1 tests/m2 tests/m3
 **Only if `check-3` reported failures; skip it when the last line was `65 passed`.** Same loop: the failing output goes back to the same Vibe
 session; re-run `check-3` after each round.
 
-```sh {"name":"fix-3","interactive":"true","closeTerminalOnSuccess":"false","excludeFromRunAll":"true"}
+```sh {"closeTerminalOnSuccess":"false","excludeFromRunAll":"true","interactive":"true","name":"fix-3"}
 uv run --env-file .env vibe -c "$(cat workshop/prompts/fix.md; uv run pytest tests/test_sample_app.py tests/m1 tests/m2 tests/m3 2>&1 | tail -n 80)"
 ```
 
@@ -613,7 +613,7 @@ reads Sentry and GitHub and returns a report), so even two cases take a minute o
 spending the time on six. The judge is one more model call per case, to grade the explanation; you do not need that
 to see whether the runner works, so this run skips it.
 
-```sh {"name":"eval-smoke","interactive":"false","excludeFromRunAll":"true"}
+```sh {"excludeFromRunAll":"true","interactive":"false","name":"eval-smoke"}
 uv run --env-file .env python evals/run_evals.py --no-judge --cases 1,2
 ```
 
@@ -624,7 +624,7 @@ is a problem in the runner or the agent to fix now, before the full run; `gate: 
 under `evals/results/` so later runs can be compared with it. The runner keeps three sessions in flight, so expect
 about five minutes.
 
-```sh {"name":"eval-baseline","interactive":"false","excludeFromRunAll":"true"}
+```sh {"excludeFromRunAll":"true","interactive":"false","name":"eval-baseline"}
 uv run --env-file .env python evals/run_evals.py --label baseline
 ```
 
@@ -635,10 +635,10 @@ scorers below threshold. Read it as a diagnosis, not a grade: a run where `excep
 `symbol` is 0.50 says the agent finds the right error and then reads the wrong function. Which scorer fails most, and
 on which cases?
 
-**Now the loop the agent lives in.** This is the part of the module that matters; the build was the setup for it. Pick
-a failing case, open its session in **Studio → Observability** (the session ID is in the saved results file)
+__Now the loop the agent lives in.__ This is the part of the module that matters; the build was the setup for it. Pick
+a failing case, open its session in __Studio → Observability__ (the session ID is in the saved results file)
 and read what the model actually did: which tools it called in what order, the file it opened, the branch it read, the
-frame it chose. Form one hypothesis about *why* it went wrong, change *one thing* in `agent/instructions.md` or a
+frame it chose. Form one hypothesis about _why_ it went wrong, change _one thing_ in `agent/instructions.md` or a
 `SKILL.md` (never code: the code did not change between runs, the words did), and rerun. Typical findings: it reports
 the caller's frame (`checkout.py`) instead of the defect because no rule says "the frame whose code you read, not the
 caller"; it reads the file on `main` instead of the release commit because the skill never says the release is a SHA;
@@ -649,7 +649,7 @@ results file, so you can tell runs apart later; everything else is the baseline 
 judge. When it finishes, the runner compares the summary with the most recent saved run (the baseline) and prints the
 delta line.
 
-```sh {"name":"eval-v2","interactive":"false","excludeFromRunAll":"true"}
+```sh {"excludeFromRunAll":"true","interactive":"false","name":"eval-v2"}
 uv run --env-file .env python evals/run_evals.py --label "instructions v2"
 ```
 
@@ -664,7 +664,7 @@ nothing.
 **What.** Commits and pushes module 3: the eval code, the two saved runs under `evals/results/`, and the improved
 instructions. The results files are worth keeping in git; they are the evidence that the change helped.
 
-```sh {"name":"commit-3","interactive":"false"}
+```sh {"interactive":"false","name":"commit-3"}
 git add -A && (git diff --cached --quiet || git commit -qm "Module 3: the eval loop") && git push && git log --oneline -1
 ```
 
@@ -681,36 +681,36 @@ restart, retries only what is safe, records what happened, and can wait for a pe
 workflow owns the lifecycle. The execution ID doubles as the idempotency key, so a replayed activity joins the running
 turn instead of starting a second investigation.
 
-**What.** `mistral init` with the workflow preset scaffolds a worker app: a uv workspace of its own under `workflow/`,
+__What.__ `mistral init` with the workflow preset scaffolds a worker app: a uv workspace of its own under `workflow/`,
 the worker in `apps/worker/` (an entrypoint that discovers every workflow in the `worker.workflows` package and serves
 it, plus a hot-reload entrypoint for `mistral dev`), a Dockerfile under `deploy/docker/`, `mistral.json` describing the
 app, and, in `.agents/skills/`, a skill that teaches your coding agent the Workflows SDK. `--no-git` because your fork
 already is a repository; `--yes` accepts the defaults. It also writes `workflow/.env` with a `DEPLOYMENT_NAME` derived
 from your login, which is the queue your worker will register on.
 
-```sh {"name":"init-workflow","interactive":"false","excludeFromRunAll":"true"}
+```sh {"excludeFromRunAll":"true","interactive":"false","name":"init-workflow"}
 mistral init workflow --preset workflow --no-git --yes
 ```
 
 **What.** The files worth reading: the app manifest, the worker's project file, the entrypoint that does the
 discovery, and the first lines of the skill your coding agent will read.
 
-```sh {"name":"scaffold-workflow","interactive":"false"}
+```sh {"interactive":"false","name":"scaffold-workflow"}
 ls -A workflow workflow/apps/worker/src/worker workflow/apps/worker/src/worker/workflows && echo ---- && cat workflow/mistral.json && echo ---- && cat workflow/apps/worker/pyproject.toml && echo ---- && sed -n 1,20p workflow/apps/worker/src/worker/entrypoints/worker.py && echo ---- && sed -n 1,12p workflow/.agents/skills/capability-workflows/SKILL.md
 ```
 
-**Look for:** `workflows/` is empty apart from `__init__.py`: that is where the module you build goes, and the worker
+__Look for:__ `workflows/` is empty apart from `__init__.py`: that is where the module you build goes, and the worker
 finds it by convention. `mistral.json` names the module, its Dockerfile and the `mistral dev` command. The skill's
 description is the SDK's own rules for the coding agent: determinism, where I/O belongs, timeouts and retries.
 
-**What.** The worker reads `workflow/.env`, not the root one. This copies your `MISTRAL_API_KEY` and
+__What.__ The worker reads `workflow/.env`, not the root one. This copies your `MISTRAL_API_KEY` and
 `INVESTIGATION_AGENT_NAME` into it, next to the `DEPLOYMENT_NAME` the scaffold chose.
 
-```sh {"name":"workflow-env","interactive":"false"}
+```sh {"interactive":"false","name":"workflow-env"}
 sh scripts/workflow-env.sh
 ```
 
-```sh {"name":"vibe-4","interactive":"true","closeTerminalOnSuccess":"false","excludeFromRunAll":"true"}
+```sh {"closeTerminalOnSuccess":"false","excludeFromRunAll":"true","interactive":"true","name":"vibe-4"}
 uv run --env-file .env vibe "$(cat workshop/prompts/04-workflow.md)"
 ```
 
@@ -723,7 +723,7 @@ input and result models, run the activity against a scripted agent (so no networ
 that the execution ID is the idempotency key, and check that the worker's discovery finds the workflow by convention.
 Nothing here starts a worker or talks to Studio; the cells after do that.
 
-```sh {"name":"check-4","interactive":"false"}
+```sh {"interactive":"false","name":"check-4"}
 uv run pytest tests/test_sample_app.py tests/m1 tests/m2 tests/m3 tests/m4
 ```
 
@@ -732,22 +732,22 @@ uv run pytest tests/test_sample_app.py tests/m1 tests/m2 tests/m3 tests/m4
 **Only if `check-4` reported failures; skip it when the last line was `76 passed`.** Same loop: the failing output goes back to the same Vibe
 session; re-run `check-4` after each round.
 
-```sh {"name":"fix-4","interactive":"true","closeTerminalOnSuccess":"false","excludeFromRunAll":"true"}
+```sh {"closeTerminalOnSuccess":"false","excludeFromRunAll":"true","interactive":"true","name":"fix-4"}
 uv run --env-file .env vibe -c "$(cat workshop/prompts/fix.md; uv run pytest tests/test_sample_app.py tests/m1 tests/m2 tests/m3 tests/m4 2>&1 | tail -n 80)"
 ```
 
-**What.** Two long-running processes, as background cells: they keep running while you move on, and you stop them from
+__What.__ Two long-running processes, as background cells: they keep running while you move on, and you stop them from
 the cell's terminal. `agents serve` runs your agent as a worker under `INVESTIGATION_AGENT_NAME`; sessions now live on
 Mistral and survive a restart. `mistral dev` runs the workflow worker from the scaffold: it reads `workflow/.env`,
 registers on its `DEPLOYMENT_NAME`, serves every workflow it discovers, and restarts itself when you edit the code. The
 first run downloads the Python the scaffold pins (3.14) and builds `workflow/.venv`. Both need Workflows enabled on your
 workspace.
 
-```sh {"name":"serve","background":"true","excludeFromRunAll":"true"}
+```sh {"background":"true","excludeFromRunAll":"true","name":"serve"}
 cd agent && uv run --env-file ../.env sh -c 'exec agents serve . --name "$INVESTIGATION_AGENT_NAME"'
 ```
 
-```sh {"name":"worker","background":"true","excludeFromRunAll":"true"}
+```sh {"background":"true","excludeFromRunAll":"true","name":"worker"}
 cd workflow && mistral dev
 ```
 
@@ -759,8 +759,8 @@ paste:
 {"question": "Checkout is failing with KeyError: 'UK'. What's the root cause?"}
 ```
 
-Open **Executions** and watch it run: the activity starts, the agent session appears in Observability, the result
-carries the report. **Then break it on purpose:** stop the `worker` cell mid-execution, start it again, and watch the
+Open __Executions__ and watch it run: the activity starts, the agent session appears in Observability, the result
+carries the report. __Then break it on purpose:__ stop the `worker` cell mid-execution, start it again, and watch the
 execution resume from the activity instead of starting over. Stop the `serve` cell and start an execution: read the
 failure your `read_report` wrote; restart `serve` and run it again.
 
@@ -768,7 +768,7 @@ failure your `read_report` wrote; restart `serve` and run it again.
 first if you are done with them (the trash icon on the cell, or Ctrl+C in its terminal); the commit does not need
 them, but the next module's deploy cells do not want a local worker claiming the same deployment name.
 
-```sh {"name":"commit-4","interactive":"false"}
+```sh {"interactive":"false","name":"commit-4"}
 git add -A && (git diff --cached --quiet || git commit -qm "Module 4: the investigate workflow") && git push && git log --oneline -1
 ```
 
@@ -778,11 +778,11 @@ Card: [workshop/05-stretch.md](workshop/05-stretch.md). This module depends on o
 Mistral GitHub App on your repository; follow along if your workspace has them, otherwise watch the demo and take the
 steps home.
 
-**What.** `agents deploy` builds a managed worker from your pushed commit. The connector names arrive as workspace
-secrets (**Studio → Secrets**, `sentry_connector_name` and `github_connector_name`) bound to environment variables, so
+__What.__ `agents deploy` builds a managed worker from your pushed commit. The connector names arrive as workspace
+secrets (__Studio → Secrets__, `sentry_connector_name` and `github_connector_name`) bound to environment variables, so
 the image never contains them.
 
-```sh {"name":"deploy-agent","interactive":"true","closeTerminalOnSuccess":"false","excludeFromRunAll":"true"}
+```sh {"closeTerminalOnSuccess":"false","excludeFromRunAll":"true","interactive":"true","name":"deploy-agent"}
 git push
 cd agent && uv run --env-file ../.env agents deploy . --name "$(grep '^INVESTIGATION_AGENT_NAME=' ../.env | cut -d= -f2)" \
   --secret-binding SENTRY_CONNECTOR_NAME=secret:workspace:sentry_connector_name \
@@ -792,7 +792,7 @@ cd agent && uv run --env-file ../.env agents deploy . --name "$(grep '^INVESTIGA
 **What.** The same eval with `--served`, against the deployed agent instead of the in-process one: proof that nothing
 changed between your laptop and the managed worker.
 
-```sh {"name":"eval-served","interactive":"false","excludeFromRunAll":"true"}
+```sh {"excludeFromRunAll":"true","interactive":"false","name":"eval-served"}
 uv run --env-file .env python evals/run_evals.py --served --cases 2 --no-judge
 ```
 
@@ -800,7 +800,7 @@ uv run --env-file .env python evals/run_evals.py --served --cases 2 --no-judge
 the pushed commit and runs it on Mistral under a name you choose. Stop the `worker` cell first: two workers on one
 deployment both take executions.
 
-```sh {"name":"deploy-workflow","interactive":"true","closeTerminalOnSuccess":"false","excludeFromRunAll":"true"}
+```sh {"closeTerminalOnSuccess":"false","excludeFromRunAll":"true","interactive":"true","name":"deploy-workflow"}
 cd workflow && mistral deploy --name "investigate-$(whoami)" --yes
 ```
 
